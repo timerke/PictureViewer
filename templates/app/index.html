@@ -1,0 +1,120 @@
+{% extends 'app/base.html' %}
+
+{% block title %}Главная{% endblock %}
+
+{% block navigation %}
+<ul class="navbar-nav mr-auto">
+    <li class="nav-item active">
+        <a class="nav-link" href="{% url 'home' %}">Главная</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'admin' %}">Админ</a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="slider">
+    <div class="slider_wrapper">
+        {% for picture in list %}
+        <div class="slider_item">
+            <img src="{{picture.filename}}" alt="{{picture.description}}"">
+        </div>
+        {% endfor %}
+    </div>
+    <a class="slider_control slider_control_left" href="#" role="button"></a>
+    <a class="slider_control slider_control_right" href="#" role="button"></a>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    'use strict';
+    var multiItemSlider = (function () {
+        return function (selector, config) {
+            var
+                main_element = document.querySelector(selector), // основный элемент блока
+                slider_wrapper = main_element.querySelector('.slider_wrapper'), // обертка для .slider-item
+                slider_items = main_element.querySelectorAll('.slider_item'), // элементы .slider-item
+                slider_controls = main_element.querySelectorAll('.slider_control'), // элементы управления
+                slider_control_left = main_element.querySelector('.slider_control_left'), // кнопка LEFT
+                slider_control_right = main_element.querySelector('.slider_control_right'), // кнопка RIGHT
+                wrapper_width = parseFloat(getComputedStyle(slider_wrapper).width), // ширина обертки
+                item_width = parseFloat(getComputedStyle(slider_items[0]).width), // ширина одного элемента    
+                position_left_item = 0, // позиция левого активного элемента
+                transform = 0, // значение транфсофрмации .slider_wrapper
+                step = item_width / wrapper_width * 100, // величина шага (для трансформации)
+                items = [], // массив элементов
+                direction = 'right'; // направление прокрутки
+            // Наполнение массива items
+            slider_items.forEach(function (item, index) {
+                items.push({ item: item, position: index, transform: 0 });
+            });
+
+            var position = {
+                getMin: 0,
+                getMax: items.length - 1,
+            }
+
+            var transform_item = function (direction) {
+                if (direction === 'right') {
+                    if (position_left_item + 1 > position.getMax) {
+                        position_left_item = position.getMin;
+                        transform += step * position.getMax;
+                    }
+                    else {
+                        position_left_item++;
+                        transform -= step;
+                    }
+                }
+                if (direction === 'left') {
+                    if (position_left_item - 1 < position.getMin) {
+                        position_left_item = position.getMax;
+                        transform -= step * position.getMax;
+                    }
+                    else {
+                        position_left_item--;
+                        transform += step;
+                    }
+                }
+                slider_wrapper.style.transform = 'translateX(' + transform + '%)';
+            }
+
+            // Обработчик события click для кнопок LEFT и RIGHT
+            var control_click = function (e) {
+                if (e.target.classList.contains('slider_control')) {
+                    e.preventDefault();
+                    direction = e.target.classList.contains('slider_control_right') ? 'right' : 'left';
+                    transform_item(direction);
+                    // Очищаем таймер прокрутки и задаем новый таймер для нового направления
+                    clearInterval(timer_id);
+                    timer_id = setInterval(transform_item, 2000, direction);
+                }
+            };
+
+            // Задаем таймер прокрутки для исходного направления
+            var timer_id = setInterval(transform_item, 2000, direction);
+
+            // Добавление к кнопкам LEFT и RIGHT обработчика control_click
+            var setup_listeners = function () {
+                slider_controls.forEach(function (item) {
+                    item.addEventListener('click', control_click);
+                });
+            }
+
+            // Инициализация
+            setup_listeners();
+
+            return {
+                right: function () { // метод right
+                    transform_item('right');
+                },
+                left: function () { // метод left
+                    transform_item('left');
+                }
+            }
+        }
+    }());
+    var slider = multiItemSlider('.slider')
+</script>
+{% endblock %}

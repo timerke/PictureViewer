@@ -1,0 +1,107 @@
+{% extends 'app/base.html' %}
+
+{% block title %}Админ{% endblock %}
+
+{% block navigation %}
+<ul class="navbar-nav mr-auto">
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'home' %}">Главная</a>
+    </li>
+    <li class="nav-item active">
+        <a class="nav-link" href="{% url 'admin' %}">Админ</a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'admin' %}">Добавить картинку</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="{% url 'admin_list' %}">Список картинок</a>
+    </li>
+</ul>
+
+<table class="pictures_table">
+    <tr>
+        <th>#</th>
+        <th>Название</th>
+        <th>Описание</th>
+        <th>Сохранить/удалить</th>
+    </tr>
+    {% for picture in list %}
+    <tr id="{{picture.id}}">
+        <td>{{picture.num}}</td>
+        <td><input type="text" class="form-control form-control-sm" value="{{picture.title}}"></td>
+        <td><input type="text" class="form-control form-control-sm" value="{{picture.description}}"></td>
+        <td>
+            <form>
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-sm" onclick="save_picture(event)">Сохранить</button>
+                <button type="submit" class="btn btn-secondary btn-sm" onclick="delete_picture(event)">Удалить</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
+
+{% block script %}
+<script>
+    /**
+     * Функция удаляет картинку.
+     * @param event: событие, вызвавшее функцию.
+     */
+    async function delete_picture(event) {
+        event.preventDefault();
+        // Получаем Id картинки, которую нужно удалить
+        let btn = event.target; // кнопка, по которой кликнули
+        let picture_id = btn.parentNode.parentNode.parentNode.id;
+        let form = new FormData(btn.parentNode);
+        // Отправляем запрос на удаление
+        let response = await fetch('{% url "admin_list" %}' + picture_id + '/', {
+            method: 'POST',
+            body: form
+        });
+        // Обрабатываем ответ
+        let result = await response.json();
+        if (response.status == 200) {
+            // Удаляем строку с информацией о картинке
+            let row = document.getElementById(picture_id);
+            let tbody = row.parentNode;
+            tbody.removeChild(row);
+        }
+    }
+    /**
+     * Функция сохраняет изменения в названии и описании картинки.
+     * @param event: событие, вызвашее функцию.
+     */
+    async function save_picture(event) {
+        event.preventDefault();
+        // Получаем Id картинки, название и описание которой нужно изменить
+        let btn = event.target; // кнопка, по которой кликнули
+        let row = btn.parentNode.parentNode.parentNode; // строка с данными картинки
+        let picture_id = row.id; // Id картинки
+        let form = new FormData(btn.parentNode);
+        // Имя и описание картинки
+        let title = row.childNodes[3].childNodes[0].value;
+        let description = row.childNodes[5].childNodes[0].value;
+        form.append('picture_id', picture_id);
+        form.append('title', title);
+        form.append('description', description);
+        // Отправляем запрос на удаление
+        let response = await fetch('{% url "admin_list" %}', {
+            method: 'POST',
+            body: form
+        });
+        // Обрабатываем ответ
+        let result = await response.json();
+        if (response.status != 200) {
+            // Изменения не сохранены
+            alert('Изменения не сохранены');
+        }
+    }
+
+</script>
+{% endblock %}

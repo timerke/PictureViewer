@@ -1,0 +1,68 @@
+{% extends 'app/base.html' %}
+
+{% block title %}Админ{% endblock %}
+
+{% block navigation %}
+<ul class="navbar-nav mr-auto">
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'home' %}">Главная</a>
+    </li>
+    <li class="nav-item active">
+        <a class="nav-link" href="{% url 'admin' %}">Админ</a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="nav-link active" href="{% url 'admin' %}">Добавить картинку</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'admin_list' %}">Список картинок</a>
+    </li>
+</ul>
+
+<form id='picture_form'>
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="title">Название картинки</label>
+        <input type="text" class="form-control" id="title" name="title">
+    </div>
+    <div class="form-group">
+        <label for="description">Описание картинки</label>
+        <input type="text" class="form-control" id="description" name="description">
+    </div>
+    <div class="form-group">
+        <label for="file">Файл картинки</label>
+        <input type="file" class="form-control-file" id="file" name="file" accept="image/*">
+    </div>
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+</form>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    /**
+     * Функция отправляет изображение на сервер.
+     */
+    picture_form.onsubmit = async (e) => {
+        e.preventDefault();
+
+        // Проверяем, что поля формы заполнены
+        if (name.value == '' || description.value == '')
+            return
+        // Отправляем запрос
+        let response = await fetch('{% url "admin" %}', {
+            method: 'POST',
+            body: new FormData(picture_form)
+        });
+        // Обрабатываем ответ
+        let result = await response.json();
+        if (response.status != 201) {
+            alert('Картинка не сохранена')
+        }
+    };
+</script>
+{% endblock %}
